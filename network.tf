@@ -9,57 +9,38 @@ resource "aws_vpc" "main" {
   }
 }
 
-resource "aws_subnet" "public_subnet_1" {
+resource "aws_subnet" "public_subnets" {
+  count = var.number_of_public_subnets 
+
   vpc_id     = aws_vpc.main.id
-  cidr_block = var.subnet1_cidr
+  cidr_block = cidrsubnet("192.168.1.0/25",3, count.index)
+  availability_zone = data.aws_availability_zones.available.names[count.index]
 
   tags = {
-    Name = format("%s-public-subnet-1", var.prefix)
+    Name = format("%s-public-subnet-%s", var.prefix, count.index)
   }
 }
 
-resource "aws_subnet" "public_subnet_2" {
+resource "aws_subnet" "private_subnets" {
+  count = var.number_of_private_subnets 
   vpc_id     = aws_vpc.main.id
-  cidr_block = var.subnet2_cidr
+  cidr_block = cidrsubnet("192.168.1.0/25",3, count.index + 2)
+  availability_zone = data.aws_availability_zones.available.names[count.index]
 
   tags = {
-    Name = format("%s-public-subnet-2", var.prefix)
+    Name = format("%s-private-subnet-%s", var.prefix, count.index)
   }
 }
 
-resource "aws_subnet" "private_subnet_1" {
+resource "aws_subnet" "secure_subnets" {
+  count = var.number_of_secure_subnets 
+
   vpc_id     = aws_vpc.main.id
-  cidr_block = var.subnet3_cidr
-
+  cidr_block = cidrsubnet("192.168.1.0/25",3, count.index + 4)
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  
   tags = {
-    Name = format("%s-private-subnet-1", var.prefix)
-  }
-}
-
-resource "aws_subnet" "private_subnet_2" {
-  vpc_id     = aws_vpc.main.id
-  cidr_block = var.subnet4_cidr
-
-  tags = {
-    Name = format("%s-private-subnet-2", var.prefix)
-  }
-}
-
-resource "aws_subnet" "secure_subnet_1" {
-  vpc_id     = aws_vpc.main.id
-  cidr_block = var.subnet5_cidr
-
-  tags = {
-    Name = format("%s-secure-subnet-2", var.prefix)
-  }
-}
-
-resource "aws_subnet" "secure_subnet_6" {
-  vpc_id     = aws_vpc.main.id
-  cidr_block = var.subnet6_cidr
-
-  tags = {
-    Name = format("%s-secure-subnet-6", var.prefix)
+    Name = format("%s-secure-subnet-%s", var.prefix, count.index)
   }
 }
 
@@ -77,7 +58,7 @@ resource "aws_eip" "ip" {
 
 resource "aws_nat_gateway" "gw" {
   allocation_id = aws_eip.ip.id
-  subnet_id     = aws_subnet.public_subnet_1.id
+  subnet_id     = aws_subnet.public_subnets[1].id
 
   tags = {
     Name = format("%s-nat-gw", var.prefix)
@@ -112,22 +93,17 @@ resource "aws_route_table" "private_route_table" {
   }
 }
 
-resource "aws_route_table_association" "public_1" {
-  subnet_id      = aws_subnet.public_subnet_1.id
+resource "aws_route_table_association" "public_subnets" {
+  for_each = { for name, subnet in aws_subnet.public_subnets : name => subnet }
+
+  subnet_id      = each.value.id
   route_table_id = aws_route_table.public_route_table.id
 }
 
-resource "aws_route_table_association" "public_2" {
-  subnet_id      = aws_subnet.public_subnet_2.id
-  route_table_id = aws_route_table.public_route_table.id
-}
 
-resource "aws_route_table_association" "private_1" {
-  subnet_id      = aws_subnet.public_subnet_1.id
-  route_table_id = aws_route_table.public_route_table.id
-}
+resource "aws_route_table_association" "private_subnets" {
+  for_each = { for name, subnet in aws_subnet.private_subnets : name => subnet }
 
-resource "aws_route_table_association" "private_2" {
-  subnet_id      = aws_subnet.private_subnet_2.id
+  subnet_id      = each.value.id
   route_table_id = aws_route_table.private_route_table.id
 }
