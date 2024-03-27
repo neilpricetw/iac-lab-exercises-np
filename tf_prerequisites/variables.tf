@@ -13,5 +13,5 @@ variable "region" {
 variable "repo_name" {
   type        = string
   description = "Repo name"
-  default     = "iac-lab-exercises-np"
+  default     = "neilpricetw/iac-lab-exercises-np"
 }
