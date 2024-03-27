@@ -40,5 +40,5 @@ jobs:
       - name: Terraform init
         run: terraform init
 
-      - name: Terraform destroy dev
-        run: terraform destroy -var-file dev.tfvars --auto-approve              
+      - name: Terraform apply dev
+        run: terraform apply -var-file dev.tfvars --auto-approve              

@@ -40,5 +40,4 @@ jobs:
       working-directory: ./Session_6_Terraform_Cloud_and_Pipelines
 
     - name: Terraform destroy dev
-      run: terraform destroy -var-file dev.tfvars --auto-approve
-      working-directory: ./Session_6_Terraform_Cloud_and_Pipelines              
+      run: terraform destroy -var-file dev.tfvars --auto-approve            
