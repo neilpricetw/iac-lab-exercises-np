@@ -4,7 +4,7 @@ on: workflow_dispatch
 
 env:
   AWS_REGION: ap-southeast-2
-  IAM_ROLE: arn:aws:iam::160071257600:role/iac-lab-sln-github-actions-role
+  IAM_ROLE: arn:aws:iam::510769981514:role/np-iac-lab-github-actions-role
 
 jobs:          
 
