@@ -32,5 +32,17 @@ jobs:
         run: |
           aws sts get-caller-identity            
 
-    # Can add extra steps to run Terraform to create the AWS resources
+      - name: Terraform Setup
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.3        
+
+      - name: Terraform init
+        run: terraform init
+        working-directory: ./Session_6_Terraform_Cloud_and_Pipelines
+
+      - name: Terraform destroy dev
+        run: terraform destroy -var-file dev.tfvars --auto-approve
+        working-directory: ./Session_6_Terraform_Cloud_and_Pipelines              
+
        
