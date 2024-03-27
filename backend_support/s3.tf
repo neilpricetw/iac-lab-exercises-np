@@ -1,31 +1,31 @@
-resource "aws_s3_bucket" "tfstate" {
+module "s3_bucket" {
+  source  = "terraform-aws-modules/s3-bucket/aws"
+  version = "4.1.1"
+
   bucket = format("%s-tfstate", var.prefix)
+  acl    = "private"
 
-  force_destroy = true  
-}
+  # Allow deletion of non-empty bucket
+  force_destroy = true
 
-resource "aws_s3_bucket_versioning" "versioning_example" {
-  bucket = aws_s3_bucket.tfstate.id
-  versioning_configuration {
-    status = "Enabled"
-  }
-}
+  # Unfortunately this feature isn't possible through a module, https://github.com/hashicorp/terraform/issues/27360
+  # This actually was an issue as my S3 bucket was deleted by another TWer twice by accident as they were using the same bucket name
+  #lifecycle {
+  #  prevent_destroy = true
+  #}
 
-resource "aws_s3_bucket_server_side_encryption_configuration" "example" {
-  bucket = aws_s3_bucket.tfstate.id
-
-  rule {
-    apply_server_side_encryption_by_default {
-      sse_algorithm     = "AES256"
+  server_side_encryption_configuration = {
+    rule = {
+      apply_server_side_encryption_by_default = {
+        sse_algorithm = "AES256"
+      }
     }
   }
-}
 
-resource "aws_s3_bucket_public_access_block" "example" {
-  bucket = aws_s3_bucket.tfstate.id
+  control_object_ownership = true
+  object_ownership         = "ObjectWriter"
 
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
+  versioning = {
+    enabled = true
+  }
 }

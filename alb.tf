@@ -3,7 +3,7 @@ resource "aws_lb" "alb" {
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb_sg.id]
-  subnets            = aws_subnet.public_subnets[*].id
+  subnets            = module.vpc.public_subnets
 
   tags = {
     Name = format("%s-alb", var.prefix)
@@ -15,7 +15,7 @@ resource "aws_lb_target_group" "tg" {
   port        = 8000
   protocol    = "HTTP"
   target_type = "ip"
-  vpc_id      = aws_vpc.main.id
+  vpc_id      = module.vpc.vpc_id
 
     health_check {
         healthy_threshold   = "5"
@@ -43,7 +43,7 @@ resource "aws_lb_listener" "front_end" {
 resource "aws_security_group" "alb_sg" {
   name        = format("%s-lb-sg", var.prefix)
   description = "Allow HTTP inbound traffic and all outbound traffic"
-  vpc_id      = aws_vpc.main.id
+  vpc_id      = module.vpc.vpc_id
 
     ingress {
   cidr_blocks         = ["0.0.0.0/0"]

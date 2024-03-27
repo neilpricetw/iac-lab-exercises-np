@@ -1,109 +1,21 @@
-resource "aws_vpc" "main" {
-  cidr_block       = var.vpc_cidr
-  instance_tenancy = "default"
-  enable_dns_support   = true
-  enable_dns_hostnames = true
+module "vpc" {
+  source  = "terraform-aws-modules/vpc/aws"
+  version = "5.5.3"
+
+  name = format("%s-vpc", var.prefix)
+  cidr = var.vpc_cidr
+
+  azs             = ["ap-southeast-2a", "ap-southeast-2b"]
+  public_subnets  = [cidrsubnet(var.vpc_cidr, 3, 1), cidrsubnet(var.vpc_cidr, 3, 2)]
+  private_subnets = [cidrsubnet(var.vpc_cidr, 3, 3), cidrsubnet(var.vpc_cidr, 3, 4)]
+  intra_subnets   = [cidrsubnet(var.vpc_cidr, 3, 5), cidrsubnet(var.vpc_cidr, 3, 6)]
+
+  enable_nat_gateway = true
+  single_nat_gateway = true
+  enable_vpn_gateway = false
 
   tags = {
-    Name = format("%s-vpc", var.prefix)
+    Terraform   = "true"
+    Environment = "Demo"
   }
-}
-
-resource "aws_subnet" "public_subnets" {
-  count = var.number_of_public_subnets 
-
-  vpc_id     = aws_vpc.main.id
-  cidr_block = cidrsubnet("192.168.1.0/25",3, count.index)
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-
-  tags = {
-    Name = format("%s-public-subnet-%s", var.prefix, count.index)
-  }
-}
-
-resource "aws_subnet" "private_subnets" {
-  count = var.number_of_private_subnets 
-  vpc_id     = aws_vpc.main.id
-  cidr_block = cidrsubnet("192.168.1.0/25",3, count.index + 2)
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-
-  tags = {
-    Name = format("%s-private-subnet-%s", var.prefix, count.index)
-  }
-}
-
-resource "aws_subnet" "secure_subnets" {
-  count = var.number_of_secure_subnets 
-
-  vpc_id     = aws_vpc.main.id
-  cidr_block = cidrsubnet("192.168.1.0/25",3, count.index + 4)
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  
-  tags = {
-    Name = format("%s-secure-subnet-%s", var.prefix, count.index)
-  }
-}
-
-resource "aws_internet_gateway" "ig" {
-  vpc_id = aws_vpc.main.id
-
-  tags = {
-    Name = format("%s-ig", var.prefix)
-  }
-}
-
-resource "aws_eip" "ip" {
-  domain   = "vpc"
-}
-
-resource "aws_nat_gateway" "gw" {
-  allocation_id = aws_eip.ip.id
-  subnet_id     = aws_subnet.public_subnets[1].id
-
-  tags = {
-    Name = format("%s-nat-gw", var.prefix)
-  }
-
-  depends_on = [aws_internet_gateway.ig]
-}
-
-resource "aws_route_table" "public_route_table" {
-  vpc_id = aws_vpc.main.id
-
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.ig.id
-  }
-
-  tags = {
-    Name = format("%s-public-route-table", var.prefix)
-  }
-}
-
-resource "aws_route_table" "private_route_table" {
-  vpc_id = aws_vpc.main.id
-
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_nat_gateway.gw.id
-  }
-
-  tags = {
-    Name = format("%s-private-route-table", var.prefix)
-  }
-}
-
-resource "aws_route_table_association" "public_subnets" {
-  for_each = { for name, subnet in aws_subnet.public_subnets : name => subnet }
-
-  subnet_id      = each.value.id
-  route_table_id = aws_route_table.public_route_table.id
-}
-
-
-resource "aws_route_table_association" "private_subnets" {
-  for_each = { for name, subnet in aws_subnet.private_subnets : name => subnet }
-
-  subnet_id      = each.value.id
-  route_table_id = aws_route_table.private_route_table.id
 }

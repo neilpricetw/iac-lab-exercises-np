@@ -1,5 +1,5 @@
 resource "aws_ecr_repository" "api" {
-  name                 = "bar"
+  name                 = format("%s-crud-app", var.prefix)
   image_tag_mutability = "MUTABLE"
 
   image_scanning_configuration {

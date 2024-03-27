@@ -26,3 +26,13 @@ variable "number_of_secure_subnets" {
   description = "Number of secure subnets in the VPC"
   type        = number
 }
+
+variable "db_username" {
+  type        = string
+  description = "Database username"
+}
+
+variable "db_name" {
+  type        = string
+  description = "Database name"
+}
