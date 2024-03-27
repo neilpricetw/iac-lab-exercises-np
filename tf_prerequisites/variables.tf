@@ -9,3 +9,9 @@ variable "region" {
   description = "Region to deploy the solution"
   default     = "ap-southeast-2"
 }
+
+variable "repo_name" {
+  type        = string
+  description = "Repo name"
+  default     = "iac-lab-exercises-np"
+}
